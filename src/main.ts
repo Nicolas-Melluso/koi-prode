@@ -12,7 +12,7 @@ async function bootstrap(): Promise<void> {
   }
   app.useStaticAssets(join(process.cwd(), 'public'));
 
-  const port = Number(process.env.PORT ?? 3000);
+  const port = Number(process.env.PORT ?? 3019);
   await app.listen(port);
 }
 
