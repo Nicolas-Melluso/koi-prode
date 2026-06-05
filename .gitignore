@@ -1,0 +1,10 @@
+.env
+.env.local
+.env.*.local
+node_modules/
+dist/
+*.log
+.qa-*.json
+.server.*.log
+.koi-prode.*.log
+database/prod-bootstrap*.sql
