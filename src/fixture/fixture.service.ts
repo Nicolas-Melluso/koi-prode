@@ -465,40 +465,13 @@ export class FixtureService {
   async recalculatePredictionLocks(): Promise<Record<string, number>> {
     const updates: Record<string, number> = {};
 
-    const groupRows = await this.db.query<{ first_group_kickoff: string | null } & RowDataPacket>(
-      `SELECT MIN(kickoff_at) AS first_group_kickoff
-       FROM matches
-       WHERE stage = 'group'
-         AND kickoff_at IS NOT NULL`
-    );
-
-    const firstGroupKickoff = groupRows[0]?.first_group_kickoff;
-    if (firstGroupKickoff) {
+    for (const stage of ['group', 'r32', 'r16', 'qf', 'sf', 'third', 'final'] as const) {
       const result = await this.db.execute(
         `UPDATE matches
-         SET prediction_closes_at = DATE_SUB(?, INTERVAL 1 HOUR)
-         WHERE stage = 'group'`,
-        [firstGroupKickoff]
-      );
-      updates.group = result.affectedRows;
-    }
-
-    for (const stage of ['r32', 'r16', 'qf', 'sf', 'third', 'final'] as const) {
-      const rows = await this.db.query<{ first_kickoff: string | null } & RowDataPacket>(
-        `SELECT MIN(kickoff_at) AS first_kickoff
-         FROM matches
-         WHERE stage = ? AND kickoff_at IS NOT NULL`,
+         SET prediction_closes_at = DATE_SUB(kickoff_at, INTERVAL 1 HOUR)
+         WHERE stage = ?
+           AND kickoff_at IS NOT NULL`,
         [stage]
-      );
-      const firstKickoff = rows[0]?.first_kickoff;
-      if (!firstKickoff) {
-        continue;
-      }
-      const result = await this.db.execute(
-        `UPDATE matches
-         SET prediction_closes_at = DATE_SUB(?, INTERVAL 1 DAY)
-         WHERE stage = ?`,
-        [firstKickoff, stage]
       );
       updates[stage] = result.affectedRows;
     }
